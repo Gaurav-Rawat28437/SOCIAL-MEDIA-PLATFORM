@@ -4,7 +4,8 @@ const verifiedSchema=new mongoose.Schema({
     email:{
         required:true,
         unique:true,
-        type:String
+        type:String,
+        trim:true
     }
 },{
     timestamps:true
