@@ -194,6 +194,8 @@ router.post("/sign-up", async (req, res) => {
 
         const createUser = await userModel.create({ username, email, password: hashedPassword })
 
+        await verifiedMailModel.deleteOne({ email })
+        
         res.status(201).json({
             success: true,
             msg: "user successfully create"
