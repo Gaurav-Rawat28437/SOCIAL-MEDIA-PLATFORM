@@ -232,7 +232,7 @@ router.post("/login",async(req,res)=>{
 
         if(!correctPassword)
         {
-            throw new Error("password is incorrect...")
+            throw new Error("password is incorrect,please enter valid password...")
         }
 
        

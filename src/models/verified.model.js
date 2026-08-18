@@ -6,7 +6,12 @@ const verifiedSchema=new mongoose.Schema({
         unique:true,
         type:String,
         trim:true
-    }
+    },
+    expireAt: {
+    type: Date,
+    default: Date.now,
+    expires: 600,
+  }
 },{
     timestamps:true
 })
