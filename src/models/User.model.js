@@ -22,14 +22,17 @@ const userSchema=new mongoose.Schema({
     },
     firstName:{
         type:String,
-        trim:true
+        trim:true,
+        required:true,
+        minLength:2,
+        maxLength:15
     },
     lastName:{
         type:String,
         trim:true
     },
     dateOfBirth:{
-        type:Date
+        type:String
     },
     gender:{
         type:String,

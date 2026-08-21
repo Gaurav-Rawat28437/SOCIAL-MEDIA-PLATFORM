@@ -19,7 +19,6 @@ router.post("/send-otp", async (req, res) => {
 
 
 
-        const otp = Math.floor(100000 + Math.random() * 900000)
 
         if (!email) {
             throw new Error("email not received from frontend")
@@ -29,17 +28,16 @@ router.post("/send-otp", async (req, res) => {
             throw new Error("please enter a valid email....")
         }
 
-        const createOtp = await otpModel.insertOne({
-            email,
-            otp
-        })
+        const verifiedUser = await verifiedMailModel.findOne({ email })
 
-        if (!createOtp) {
-            throw new Error("opt not save in mongo")
+        if (verifiedUser) {
+            await verifiedMailModel.deleteOne({ email })
         }
 
-        await resend.emails.send({
-            from: "Gaurav <onboarding@resend.dev>",
+        const otp = Math.floor(100000 + Math.random() * 900000)
+
+        const emailResponse = await resend.emails.send({
+            from: "Gaurav <shubham@noisy.co.in>",
             subject: "Your OTP for Email Verification",
             to: email,
             html: ` 
@@ -48,13 +46,13 @@ router.post("/send-otp", async (req, res) => {
                     <h2 style="text-align: center; color: #111827; margin-bottom: 10px;">
                         Verify Your Email
                     </h2>
-
+                    
                     <p style="font-size: 16px; color: #4b5563;">
                         Hello,
                     </p>
 
                     <p style="font-size: 16px; color: #4b5563; line-height: 1.6;">
-                        Welcome to <strong>Social App</strong>! Please use the verification code below to verify your email address.
+                        Welcome to <strong>MUUV App</strong>! Please use the verification code below to verify your email address.
                     </p>
 
                     <div style="text-align: center; margin: 30px 0;">
@@ -82,6 +80,18 @@ router.post("/send-otp", async (req, res) => {
                     `
         })
 
+        if (emailResponse.error) {
+            throw new Error("Unable to send OTP email. Please try again.")
+        }
+
+        const createOtp = await otpModel.insertOne({
+            email,
+            otp
+        })
+
+        if (!createOtp) {
+            throw new Error("opt not save in mongo")
+        }
 
         res.status(201).json({
             success: true,
@@ -195,7 +205,7 @@ router.post("/sign-up", async (req, res) => {
         const createUser = await userModel.create({ username, email, password: hashedPassword })
 
         await verifiedMailModel.deleteOne({ email })
-        
+
         res.status(201).json({
             success: true,
             msg: "user successfully create"
@@ -214,7 +224,7 @@ router.post("/sign-up", async (req, res) => {
 
 router.post("/login", async (req, res) => {
     try {
-
+    
         const { email, password, username } = req.body
 
         if (!email && !username) {
@@ -235,7 +245,7 @@ router.post("/login", async (req, res) => {
             throw new Error("user not found in DB...")
         }
 
-        const correctPassword = bcrypt.compare(password, foundUser.password)
+        const correctPassword = await bcrypt.compare(password, foundUser.password)
 
         if (!correctPassword) {
             throw new Error("password is incorrect,please enter valid password...")
@@ -251,6 +261,23 @@ router.post("/login", async (req, res) => {
         })
     }
     catch (error) {
+        res.status(400).json({
+            msg: error.message,
+            error: error
+        })
+    }
+})
+
+
+router.post("/logout",async(req,res)=>{
+    try{
+        res.cookie("token","")
+        res.status(200).json({
+            success: true,
+            msg: "user logout successfully"
+        })
+    }
+    catch(error){
         res.status(400).json({
             msg: error.message,
             error: error
