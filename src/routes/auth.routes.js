@@ -12,13 +12,11 @@ const jwt = require("jsonwebtoken")
 const { otpModel } = require("../models/otp.model")
 const { verifiedMailModel } = require("../models/verified.model")
 const { userModel } = require("../models/User.model")
+const { otpLimiter, loginLimiter, verifyLimiter}=require("../middleware/rateLimiter")
 
-router.post("/send-otp", async (req, res) => {
+router.post("/send-otp", otpLimiter,async (req, res) => {
     try {
         const { email } = req.body
-
-
-
 
         if (!email) {
             throw new Error("email not received from frontend")
@@ -34,6 +32,14 @@ router.post("/send-otp", async (req, res) => {
             await verifiedMailModel.deleteOne({ email })
         }
 
+        const existingUser = await userModel.findOne({ email });
+
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                msg: "Account already exists. Please login."
+            })
+        }
         const otp = Math.floor(100000 + Math.random() * 900000)
 
         const emailResponse = await resend.emails.send({
@@ -84,10 +90,7 @@ router.post("/send-otp", async (req, res) => {
             throw new Error("Unable to send OTP email. Please try again.")
         }
 
-        const createOtp = await otpModel.insertOne({
-            email,
-            otp
-        })
+        const createOtp = await otpModel.findOneAndUpdate({ email }, { otp }, { upsert: true, new: true})
 
         if (!createOtp) {
             throw new Error("opt not save in mongo")
@@ -106,7 +109,7 @@ router.post("/send-otp", async (req, res) => {
     }
 })
 
-router.post("/verify-otp", async (req, res) => {
+router.post("/verify-otp",verifyLimiter, async (req, res) => {
     try {
         const { email, otp } = req.body
 
@@ -222,9 +225,9 @@ router.post("/sign-up", async (req, res) => {
 })
 
 
-router.post("/login", async (req, res) => {
+router.post("/login",loginLimiter, async (req, res) => {
     try {
-    
+
         const { email, password, username } = req.body
 
         if (!email && !username) {
@@ -269,15 +272,15 @@ router.post("/login", async (req, res) => {
 })
 
 
-router.post("/logout",async(req,res)=>{
-    try{
-        res.cookie("token","")
+router.post("/logout", async (req, res) => {
+    try {
+        res.cookie("token", "")
         res.status(200).json({
             success: true,
             msg: "user logout successfully"
         })
     }
-    catch(error){
+    catch (error) {
         res.status(400).json({
             msg: error.message,
             error: error
