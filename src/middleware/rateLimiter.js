@@ -20,7 +20,7 @@ const verifyLimiter=rateLimit({
 
 const loginLimiter=rateLimit({
     windowMs:30*60*1000,
-    max:5,
+    max:100,
     message: {
         success: false,
         msg: "Too many login requests. Please try again later."

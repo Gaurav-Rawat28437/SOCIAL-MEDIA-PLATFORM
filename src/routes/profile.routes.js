@@ -2,7 +2,6 @@ const express = require("express")
 const validator = require("validator")
 const { userModel } = require("../models/User.model")
 const { isLoggedIn } = require("../middleware/isLoggedIn.middleware")
-const bcrypt = require("bcrypt")
 
 const router = express.Router()
 

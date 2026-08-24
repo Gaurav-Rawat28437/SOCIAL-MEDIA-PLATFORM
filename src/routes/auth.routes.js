@@ -12,9 +12,9 @@ const jwt = require("jsonwebtoken")
 const { otpModel } = require("../models/otp.model")
 const { verifiedMailModel } = require("../models/verified.model")
 const { userModel } = require("../models/User.model")
-const { otpLimiter, loginLimiter, verifyLimiter}=require("../middleware/rateLimiter")
+const { otpLimiter, loginLimiter, verifyLimiter } = require("../middleware/rateLimiter")
 
-router.post("/send-otp", otpLimiter,async (req, res) => {
+router.post("/send-otp", otpLimiter, async (req, res) => {
     try {
         const { email } = req.body
 
@@ -90,7 +90,7 @@ router.post("/send-otp", otpLimiter,async (req, res) => {
             throw new Error("Unable to send OTP email. Please try again.")
         }
 
-        const createOtp = await otpModel.findOneAndUpdate({ email }, { otp }, { upsert: true, new: true})
+        const createOtp = await otpModel.findOneAndUpdate({ email }, { otp }, { upsert: true, new: true })
 
         if (!createOtp) {
             throw new Error("opt not save in mongo")
@@ -109,7 +109,7 @@ router.post("/send-otp", otpLimiter,async (req, res) => {
     }
 })
 
-router.post("/verify-otp",verifyLimiter, async (req, res) => {
+router.post("/verify-otp", verifyLimiter, async (req, res) => {
     try {
         const { email, otp } = req.body
 
@@ -225,7 +225,7 @@ router.post("/sign-up", async (req, res) => {
 })
 
 
-router.post("/login",loginLimiter, async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
     try {
 
         const { email, password, username } = req.body
@@ -245,7 +245,7 @@ router.post("/login",loginLimiter, async (req, res) => {
         })
 
         if (!foundUser) {
-            throw new Error("user not found in DB...")
+            throw new Error("user not found,invalide credentials")
         }
 
         const correctPassword = await bcrypt.compare(password, foundUser.password)
@@ -260,7 +260,21 @@ router.post("/login",loginLimiter, async (req, res) => {
         res.cookie("token", token, { maxAge: 7 * 24 * 60 * 60 * 1000 })
         res.status(200).json({
             success: true,
-            msg: "user login successfully"
+            msg: "user login successfully",
+             data:{
+                firstName: foundUser.firstName,
+                lastName: foundUser.lastName,
+                username: foundUser.username,
+                email: foundUser.email,
+                gender: foundUser.gender,
+                dateOfBirth: foundUser.dateOfBirth,
+                displayPicture: foundUser.displayPicture,
+                bio: foundUser.bio,
+                isCompletedProfile: foundUser.isCompletedProfile,
+                followers: foundUser.followers,
+                following: foundUser.following,
+                posts: foundUser.posts
+            }
         })
     }
     catch (error) {
@@ -282,6 +296,50 @@ router.post("/logout", async (req, res) => {
     }
     catch (error) {
         res.status(400).json({
+            msg: error.message,
+            error: error
+        })
+    }
+})
+
+
+router.get("/get-user-data", async(req, res)=>{
+
+    try{
+        const {token}=req.cookies
+
+        if (!token) {
+            throw new Error("Please login again")
+        }
+
+        const decode=jwt.verify(token,process.env.JWT_SECRET)
+         
+        const foundUser= await userModel.findById(decode.id)
+    
+        if(!foundUser) throw new Error("User logout,please login again...")
+
+        res.status(200).json({
+            success: true,
+            msg: "user login successfully",
+            data:{
+                firstName: foundUser.firstName,
+                lastName: foundUser.lastName,
+                username: foundUser.username,
+                email: foundUser.email,
+                gender: foundUser.gender,
+                dateOfBirth: foundUser.dateOfBirth,
+                displayPicture: foundUser.displayPicture,
+                bio: foundUser.bio,
+                isCompletedProfile: foundUser.isCompletedProfile,
+                followers: foundUser.followers,
+                following: foundUser.following,
+                posts: foundUser.posts
+            }
+        })
+
+    }
+    catch(error) {
+        res.status(401).json({
             msg: error.message,
             error: error
         })
