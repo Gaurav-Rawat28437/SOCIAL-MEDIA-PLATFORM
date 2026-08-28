@@ -13,6 +13,7 @@ const { otpModel } = require("../models/otp.model")
 const { verifiedMailModel } = require("../models/verified.model")
 const { userModel } = require("../models/User.model")
 const { otpLimiter, loginLimiter, verifyLimiter } = require("../middleware/rateLimiter")
+const { isLoggedIn } = require("../middleware/isLoggedIn.middleware")
 
 router.post("/send-otp", otpLimiter, async (req, res) => {
     try {
@@ -177,8 +178,8 @@ router.post("/sign-up", async (req, res) => {
             throw new Error("please enter strong password...")
         }
 
-        if (username.length < 2 || username.length > 12) {
-            throw new Error("please enter usernamelength btw 2 to 12...")
+        if (username.length < 2 || username.length > 20) {
+            throw new Error("please enter usernamelength btw 2 to 20...")
         }
 
         const foundVerifyUser = await userModel.findOne({
@@ -245,7 +246,7 @@ router.post("/login", loginLimiter, async (req, res) => {
         })
 
         if (!foundUser) {
-            throw new Error("user not found,invalide credentials")
+            throw new Error("user not found,please create an account first")
         }
 
         const correctPassword = await bcrypt.compare(password, foundUser.password)
@@ -258,6 +259,9 @@ router.post("/login", loginLimiter, async (req, res) => {
         const token = jwt.sign({ id: foundUser._id }, process.env.JWT_SECRET, { expiresIn: "7d" }) //can add expireing data init by passing {expiresIn:"7d"} it will expire in 7days
 
         res.cookie("token", token, { maxAge: 7 * 24 * 60 * 60 * 1000 })
+
+        res.set("Cache-Control", "no-store")
+
         res.status(200).json({
             success: true,
             msg: "user login successfully",
@@ -269,11 +273,13 @@ router.post("/login", loginLimiter, async (req, res) => {
                 gender: foundUser.gender,
                 dateOfBirth: foundUser.dateOfBirth,
                 displayPicture: foundUser.displayPicture,
+                coverPicture: foundUser.coverPicture,
                 bio: foundUser.bio,
                 isCompletedProfile: foundUser.isCompletedProfile,
                 followers: foundUser.followers,
                 following: foundUser.following,
-                posts: foundUser.posts
+                posts: foundUser.posts,
+                createdAt:foundUser.createdAt
             }
         })
     }
@@ -286,9 +292,9 @@ router.post("/login", loginLimiter, async (req, res) => {
 })
 
 
-router.post("/logout", async (req, res) => {
+router.post("/logout",isLoggedIn, async (req, res) => {
     try {
-        res.cookie("token", "")
+        res.cookie("token","GauravSinghRawat")
         res.status(200).json({
             success: true,
             msg: "user logout successfully"
@@ -318,6 +324,8 @@ router.get("/get-user-data", async(req, res)=>{
     
         if(!foundUser) throw new Error("User logout,please login again...")
 
+        res.set("Cache-Control", "no-store")
+
         res.status(200).json({
             success: true,
             msg: "user login successfully",
@@ -329,11 +337,13 @@ router.get("/get-user-data", async(req, res)=>{
                 gender: foundUser.gender,
                 dateOfBirth: foundUser.dateOfBirth,
                 displayPicture: foundUser.displayPicture,
+                coverPicture: foundUser.coverPicture,
                 bio: foundUser.bio,
                 isCompletedProfile: foundUser.isCompletedProfile,
                 followers: foundUser.followers,
                 following: foundUser.following,
-                posts: foundUser.posts
+                posts: foundUser.posts,
+                createdAt:foundUser.createdAt
             }
         })
 

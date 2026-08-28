@@ -1,65 +1,68 @@
-const mongoose=require("mongoose")
+const mongoose = require("mongoose")
 
-const userSchema=new mongoose.Schema({
-    email:{
-        type:String,
-        required:true,
-        unique:true,
-        trim:true,
-        lowercase:true
-    },
-    password:{
+const userSchema = new mongoose.Schema({
+    email: {
         type: String,
-        required:true,
+        required: true,
+        unique: true,
+        trim: true,
+        lowercase: true
     },
-    username:{
-        type:String,
-        required:true,
-        unique:true,
-        trim:true,
-        minLength:2,
-        maxLength:12
+    password: {
+        type: String,
+        required: true,
     },
-    firstName:{
-        type:String,
-        trim:true,
-        required:true,
-        minLength:2,
-        maxLength:15
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        minLength: 2,
+        maxLength: 20
     },
-    lastName:{
-        type:String,
-        trim:true
+    firstName: {
+        type: String,
+        trim: true,
+        minLength: 2,
+        maxLength: 15
     },
-    dateOfBirth:{
-        type:String
+    lastName: {
+        type: String,
+        trim: true
     },
-    gender:{
-        type:String,
-        enum:["male","female","other"]
+    dateOfBirth: {
+        type: String
     },
-    displayPicture:{
-        type:String,
-        default:""
+    gender: {
+        type: String,
+        enum: ["male", "female", "other"]
     },
-    bio:{
-        type:String,
-        maxlength:500,
-        default:""
+    displayPicture: {
+        type: String,
+        default: ""
     },
-    isCompletedProfile:{
-        type:Boolean,
-        default:false
+    coverPicture: {
+        type: String,
+        default: ""
     },
-    followers : [],
-    following : [],
-    posts : []
-},{
-    timestamps:true
+    bio: {
+        type: String,
+        maxlength: 500,
+        default: ""
+    },
+    isCompletedProfile: {
+        type: Boolean,
+        default: false
+    },
+    followers: [],
+    following: [],
+    posts: []
+}, {
+    timestamps: true
 })
 
-const userModel=mongoose.model("user",userSchema)
+const userModel = mongoose.model("user", userSchema)
 
-module.exports={
+module.exports = {
     userModel
 }
