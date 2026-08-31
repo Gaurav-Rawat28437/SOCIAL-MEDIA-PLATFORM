@@ -6,6 +6,9 @@ const cookieParser=require("cookie-parser")
 
 const {authRouter}=require("./routes/auth.routes")
 const {profileRouter}=require("./routes/profile.routes")
+const { postRouter } = require("./routes/post.routes")
+const { isLoggedIn } = require("./middleware/isLoggedIn.middleware")
+
 
 
 
@@ -19,6 +22,7 @@ app.use(cookieParser())
 
 app.use("/api/auth",authRouter)
 app.use("/api/profile",profileRouter)
+app.use("/api/post",isLoggedIn,postRouter)
 
 app.use((req,res)=>{
     res.status(400).json({
