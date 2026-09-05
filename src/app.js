@@ -8,12 +8,13 @@ const {authRouter}=require("./routes/auth.routes")
 const {profileRouter}=require("./routes/profile.routes")
 const { postRouter } = require("./routes/post.routes")
 const { isLoggedIn } = require("./middleware/isLoggedIn.middleware")
+const { likeRouter } = require("./routes/like.routes")
 
 
 
 
 app.use(cors({
-    origin:[process.env.FE_URL,"http://localhost:5173"],
+    origin:[process.env.FE_URL,"http://localhost:5173","http://localhost:5174"],
     credentials: true
 }))
 
@@ -23,6 +24,7 @@ app.use(cookieParser())
 app.use("/api/auth",authRouter)
 app.use("/api/profile",profileRouter)
 app.use("/api/post",isLoggedIn,postRouter)
+app.use("/api/like",isLoggedIn,likeRouter)
 
 app.use((req,res)=>{
     res.status(400).json({

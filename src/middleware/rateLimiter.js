@@ -5,7 +5,7 @@ const otpLimiter = rateLimit({
     max: 10,            
     message: {
         success: false,
-        msg: "Too many OTP requests. Please try again later."
+        msg: "Too many OTP requests. Please try again after sometime."
     }
 })
 
@@ -14,16 +14,16 @@ const verifyLimiter=rateLimit({
     max:5,
     message: {
         success: false,
-        msg: "Too many OTP attempts. Please try again later."
+        msg: "Too many OTP attempts. Please try again after sometime."
     }
 })
 
 const loginLimiter=rateLimit({
     windowMs:30*60*1000,
-    max:100,
+    max:12,
     message: {
         success: false,
-        msg: "Too many login requests. Please try again later."
+        msg: "Too many login requests. Please try again after sometime."
     }
 })
 

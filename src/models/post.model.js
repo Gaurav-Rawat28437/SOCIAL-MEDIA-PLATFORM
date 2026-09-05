@@ -11,11 +11,24 @@ const postSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
-    authorId:{
+    authorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "user",
-        required:true
-        
+        required: true
+
+    },
+    likesCount: {
+        type: Number,
+        default: 0
+    },
+    commentsCount: {
+        type: Number,
+        default: 0
+    },
+
+    repostsCount: {
+        type: Number,
+        default: 0
     }
 
 }, {

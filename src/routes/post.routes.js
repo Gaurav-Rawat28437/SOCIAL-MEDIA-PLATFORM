@@ -1,6 +1,7 @@
 const express=require("express")
 const { postModel } = require("../models/post.model")
 const router=express.Router()
+const { likeModel } = require("../models/like.model")
 
 router.post("/create", async (req, res) => {
     try {
@@ -20,7 +21,7 @@ router.post("/create", async (req, res) => {
 
         res.status(201).json({
             success: true,
-            msg: "Post uploaded successfully",
+            msg: createdPost.imgUrl?"Post uploaded successfully":"Thought uploaded successfully",
             data: createdPost
         })
     } catch (error) {
@@ -32,31 +33,48 @@ router.post("/create", async (req, res) => {
 })
 
 router.get("/my-posts", async (req, res) => {
+
     try {
 
-        const page=Number(req.query.page || 1)
-        const limit=Number(req.query.limit || 18)
+        const page = Number(req.query.page || 1)
+        const limit = Number(req.query.limit || 18)
 
-        const skip=(page-1)*limit
+        const skip = (page - 1) * limit
+
         const posts = await postModel
             .find({
                 authorId: req.foundUser._id,
-                imgUrl:{$ne:""}
+                imgUrl: { $ne: "" }
             })
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(limit+1)
+            .limit(limit + 1)
 
-        const hasMore=posts.length>limit
-       if(hasMore)
-       {
-        posts.pop()
-       }
+        const hasMore = posts.length > limit
+
+        if (hasMore) {
+            posts.pop()
+        }
+
+        const postsWithLike = await Promise.all(
+            posts.map(async (post) => {
+
+                const like = await likeModel.findOne({
+                    user: req.foundUser._id,
+                    post: post._id
+                })
+
+                return {
+                    ...post.toObject(),
+                    isLiked: !!like
+                }
+            })
+        )
 
         res.status(200).json({
             success: true,
-            data: posts,
-            hasMore:hasMore
+            data: postsWithLike,
+            hasMore
         })
 
     } catch (error) {
@@ -131,7 +149,7 @@ router.patch("/edit/:postId", async (req, res) => {
 
         res.status(200).json({
             success: true,
-            msg: "Post updated successfully",
+            msg: updatedPost.imgUrl?"Post updated successfully":"Thought updated successfully",
             data: updatedPost
         })
 
@@ -146,6 +164,7 @@ router.patch("/edit/:postId", async (req, res) => {
 })
 
 router.get("/my-thoughts", async (req, res) => {
+
     try {
 
         const page = Number(req.query.page || 1)
@@ -168,9 +187,24 @@ router.get("/my-thoughts", async (req, res) => {
             thoughts.pop()
         }
 
+        const thoughtsWithLike = await Promise.all(
+            thoughts.map(async (thought) => {
+
+                const like = await likeModel.findOne({
+                    user: req.foundUser._id,
+                    post: thought._id
+                })
+
+                return {
+                    ...thought.toObject(),
+                    isLiked: !!like
+                }
+            })
+        )
+
         res.status(200).json({
             success: true,
-            data: thoughts,
+            data: thoughtsWithLike,
             hasMore
         })
 
@@ -185,6 +219,7 @@ router.get("/my-thoughts", async (req, res) => {
 })
 
 router.get("/feed", async (req, res) => {
+
     try {
 
         const page = Number(req.query.page || 1)
@@ -204,12 +239,26 @@ router.get("/feed", async (req, res) => {
                 "firstName lastName username displayPicture"
             )
 
-        const hasMore = skip + posts.length < totalPosts
+        const postsWithLike = await Promise.all(
+            posts.map(async (post) => {
 
+                const like = await likeModel.findOne({
+                    user: req.foundUser._id,
+                    post: post._id
+                })
+
+                return {
+                    ...post.toObject(),
+                    isLiked: !!like
+                }
+            })
+        )
+
+        const hasMore = skip + posts.length < totalPosts
 
         res.status(200).json({
             success: true,
-            data: posts,
+            data: postsWithLike,
             hasMore
         })
 
@@ -222,6 +271,7 @@ router.get("/feed", async (req, res) => {
 
     }
 })
+
 
 module.exports={
     postRouter:router
