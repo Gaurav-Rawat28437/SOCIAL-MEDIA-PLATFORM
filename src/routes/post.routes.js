@@ -272,6 +272,51 @@ router.get("/feed", async (req, res) => {
     }
 })
 
+router.get("/:postId", async (req, res) => {
+
+    try {
+
+        const { postId } = req.params
+
+        const post = await postModel
+            .findById(postId)
+            .populate(
+                "authorId",
+                "firstName lastName username displayPicture"
+            )
+
+        if (!post) {
+            return res.status(404).json({
+                success: false,
+                msg: "Post not found"
+            })
+        }
+
+        const like = await likeModel.findOne({
+            user: req.foundUser._id,
+            post: post._id
+        })
+
+        const postData = {
+            ...post.toObject(),
+            isLiked: !!like
+        }
+
+        res.status(200).json({
+            success: true,
+            data: postData
+        })
+
+    } catch (error) {
+
+        res.status(400).json({
+            success: false,
+            msg: error.message
+        })
+
+    }
+})
+
 
 module.exports={
     postRouter:router

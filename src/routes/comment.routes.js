@@ -6,7 +6,7 @@ const { commentModel } = require("../models/comment.model")
 
 
 
-router.post("/:postId", async (req, res) => {
+router.post("/create/:postId", async (req, res) => {
 
     try {
 
@@ -67,7 +67,7 @@ router.post("/:postId", async (req, res) => {
 })
 
 
-router.get("/:postId", async (req, res) => {
+router.get("/getAllComment/:postId", async (req, res) => {
 
     try {
 
@@ -108,7 +108,7 @@ router.get("/:postId", async (req, res) => {
 })
 
 
-router.delete("/:commentId", async (req, res) => {
+router.delete("/delete/:commentId", async (req, res) => {
     try {
         const userId = req.foundUser._id
         const { commentId } = req.params
@@ -159,7 +159,7 @@ router.delete("/:commentId", async (req, res) => {
 })
 
 
-router.put("/:commentId", async (req, res) => {
+router.put("/edit/:commentId", async (req, res) => {
     try {
         const userId = req.foundUser._id
         const { commentId } = req.params
@@ -203,6 +203,37 @@ router.put("/:commentId", async (req, res) => {
         return res.status(500).json({
             success: false,
             msg: "Unable to update comment"
+        })
+    }
+})
+
+
+router.get("/my-comments", async (req, res) => {
+    try {
+        const userId = req.foundUser._id
+
+        const comments = await commentModel
+            .find({ user: userId })
+            .populate(
+                "user",
+                "firstName lastName username displayPicture"
+            )
+            .populate(
+                "post",
+                "content imgUrl user"
+            )
+            .sort({ createdAt: -1 })
+
+        return res.status(200).json({
+            success: true,
+            data: comments
+        })
+    } catch (error) {
+        console.log(error)
+
+        return res.status(500).json({
+            success: false,
+            msg: "Unable to get replies"
         })
     }
 })
