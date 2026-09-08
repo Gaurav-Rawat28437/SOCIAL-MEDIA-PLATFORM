@@ -26,7 +26,7 @@ const postSchema = new mongoose.Schema({
         default: 0
     },
 
-    repostsCount: {
+    shareCount: {
         type: Number,
         default: 0
     }

@@ -1,5 +1,5 @@
-const express=require("express")
-const router=express.Router()
+const express = require("express")
+const router = express.Router()
 
 const { postModel } = require("../models/post.model")
 const { commentModel } = require("../models/comment.model")
@@ -212,21 +212,45 @@ router.get("/my-comments", async (req, res) => {
     try {
         const userId = req.foundUser._id
 
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 10
+        const skip = (page - 1) * limit
+
+        const totalComments = await commentModel.countDocuments({
+            user: userId
+        })
+
         const comments = await commentModel
             .find({ user: userId })
             .populate(
                 "user",
                 "firstName lastName username displayPicture"
             )
-            .populate(
-                "post",
-                "content imgUrl user"
-            )
+            .populate({
+                path: "post",
+                select:
+                    "content imgUrl authorId likesCount commentsCount repostsCount createdAt",
+                populate: {
+                    path: "authorId",
+                    select:
+                        "displayPicture username firstName lastName"
+                }
+            })
             .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+
+        const hasMore = skip + comments.length < totalComments
 
         return res.status(200).json({
             success: true,
-            data: comments
+            data: comments,
+            pagination: {
+                page,
+                limit,
+                total: totalComments,
+                hasMore
+            }
         })
     } catch (error) {
         console.log(error)
@@ -238,6 +262,6 @@ router.get("/my-comments", async (req, res) => {
     }
 })
 
-module.exports={
-    commentRouter:router
+module.exports = {
+    commentRouter: router
 }
